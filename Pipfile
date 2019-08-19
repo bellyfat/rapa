@@ -14,6 +14,7 @@ channels = "*"
 soundcard = "*"
 cffi = "*"
 websockets = "*"
+mod-wsgi = "*"
 
 [requires]
 python_version = "3.6"
