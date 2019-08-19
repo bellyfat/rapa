@@ -32,6 +32,11 @@ python manage.py runserver
 * Create consumer.py in speaker
 * `python manage.py runserver`
 
+### Daphne
+* On Ubuntu, `sudo apt-get install daphne`
+* Create asgi.py in rapa_server. Reference: https://channels.readthedocs.io/en/latest/deploying.html
+* `daphne -p 8000 -b 192.168.0.104 rapa_server.asgi:application`
+
 ### Authentication
 N/A
 
