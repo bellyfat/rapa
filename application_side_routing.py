@@ -43,4 +43,4 @@ async def hello(uri):
         print(total)
 
 asyncio.get_event_loop().run_until_complete(
-    hello('ws://localhost:8000/ws/speaker/audioplayback/'))
+    hello('ws://192.168.0.104:8000/ws/speaker/audioplayback/'))
