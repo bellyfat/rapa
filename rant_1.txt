@@ -1,0 +1,68 @@
+date: weekend of 25 Aug 2019
+
+pyaudio multiprocessing prototype
+extract pcm from wav file
+encode with opus codec
+save into list
+decode with opus codec
+play audio packet
+
+pyaudio needs to run while opus decodes
+problem with GIL
+assuming pyaudio.stream.write() releases GIL
+create thread to play audio
+thread will read from data queue and play it
+problem 1: buffer underrun
+    this is caused by python application being unable to supply audio data faster than or as fast as the speaker can play.
+    because of GIL, ~~it's not possible to create a hard real time application,~~
+    though audio data is not critical, packets can be lost while maintaining acceptable experience in practice, it is not possible to try to get audio data at a strict period
+    it would have been good enough to have an application grab the audio data every 50ms, the audio data will then play for 50ms, and grab again. if no data is available when trying to grab, then play digital silence for 50ms, and then try again. this is not achievable because of drift between periods.
+
+    this created several design requirements.
+        audio player is detached from source (sink and source is independent)
+        sink is sequential and doesn't overlap
+        source will wait for sink to be ready, finish playing all previous data
+    timer would have been a good choice, but python timer objects doesn't accept arguments
+    this felt weird, i don't know if that is true or not, but nevermind.
+    i used threads, accepting Event object and data queue
+
+problem 2: periodic time drift
+    this is caused by processing time between periods, for example:
+        first period is 50ms, time is 50ms
+        period is done, now restart, time is 51ms
+        second period is 50ms, time is 101ms
+        period is done, now restart, time is 102ms
+        ...
+    as you can see, the time spent between periods will add up
+    if streaming audio for VOIP, the situation will be the audio plays alright at first, slowly you will notice some delay, and the delay will increase over time
+    thus someone somewhere will need to handle this time drift.
+    since the audio player is more time critical, it is done at source.
+    it is assumed that the source will know the time for each period, it's the time that each audio packet will play
+    the source will then drop packets as required
+    the design is working but incomplete
+
+problem 3: it's not easy to test if the stream is practical......
+
+python-opus profiling was done on decoding
+for rate of 48000 and chunk size of 1920, it took less than 5ms for each decode.
+as contrast, that chunk size will play for 40ms.
+a slightly more detailed profile will show that the c function took less than 2ms.
+a one line python conversion of c function output data to python byte array took approximately 2ms
+it is using
+array.array('h', pcm[:result*channels]).tostring()
+to convert and i tried
+struct.pack('B' * len(pcm[:result*channels], * pcm[:result*channels]))
+both gave similar performance
+
+initial prototype was using python-opus in brautopy
+reference: https://github.com/rahulsekar/brautopy.git
+it seems like brautopy did some fix to python-opus
+WebSocket Audio API also served as a good example for libopus
+reference: https://github.com/Ivan-Feofanov/ws-audio-api.git
+
+as an exercise, a multiprocessing wrapper was also written for pyaudio, instead of thread
+a problem with this is that it seems like pyaudio stream needs to be initialized within it
+i'm not sure
+but the good thing is that it resolves the GIL problem
+it felt like my mp3 played with less stutter when using the multiprocessing variant
+but i might be subjective
