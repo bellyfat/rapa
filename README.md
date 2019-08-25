@@ -51,3 +51,10 @@ N/A
 * Reference for Virtual Audio Cable:
 https://www.howtogeek.com/364369/how-to-record-your-pc%E2%80%99s-audio-with-virtual-audio-cable/
 https://www.vb-audio.com/Cable/index.htm
+
+git submodule init
+git submodule update
+### python-opus
+git submodule add https://github.com/josephlim94/python-opus.git
+cd python-opus
+python setup.py develop
