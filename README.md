@@ -58,3 +58,7 @@ git submodule update
 git submodule add https://github.com/josephlim94/python-opus.git
 cd python-opus
 python setup.py develop
+It uses libopus shared library, on ubuntu you install it with some sudo apt-get, but on windows it gets a bit tricky.
+download binary from opus official website
+either copy dlls to current directory or C:\Windows\System32 and C:\Windows\SysWOW64
+copy libgcc_s_sjlj-1.dll, libopus-0.dll and libwinpthread-1.dll together to the location, else python will fail to load the dll.
