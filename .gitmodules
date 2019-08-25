@@ -1,0 +1,3 @@
+[submodule "python-opus"]
+	path = python-opus
+	url = https://github.com/josephlim94/python-opus.git
