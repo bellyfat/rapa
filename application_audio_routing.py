@@ -3,8 +3,9 @@ import wave
 import asyncio
 import websockets
 import time
+from opus import encoder as opus_encoder
 
-chunk = 1024  # Record in chunks of 1024 samples
+chunk = 1920  # Record in chunks of 1024 samples
 sample_format = pyaudio.paInt16  # 16 bits per sample
 channels = 2
 fs = 44100  # Record at 44100 samples per second
@@ -34,21 +35,29 @@ async def hello(uri):
                         input=True,
                         input_device_index=input_device_info["index"])
 
+        RATE = 48000
+        CHANNELS = 2
+        encoder = opus_encoder.Encoder(RATE,CHANNELS,'voip')
+
         try:
             # Run until user press Ctrl-C
             while True:
-                frames = b''  # Initialize byte array to store frames
-                ttl_bytes = 0
+                #frames = b''  # Initialize byte array to store frames
+                #ttl_bytes = 0
 
                 # Store data in chunks for 3 seconds
-                for i in range(0, int(fs / chunk * seconds)):
-                    data = stream.read(chunk)
-                    #stream.write(data)
-                    frames = frames + data
-                    ttl_bytes += len(data)
+                #for i in range(0, int(fs / chunk * seconds)):
+                #    data = stream.read(chunk)
+                #    #stream.write(data)
+                #    frames = frames + data
+                #    ttl_bytes += len(data)
+
+                data = stream.read(chunk)
+                encoded_data = encoder.encode(data, chunk)
 
                 print("Sending some frames")
-                await websocket.send(frames)
+                #await websocket.send(frames)
+                await websocket.send(encoded_data)
         except:
             print("This is a test")
             exit()
