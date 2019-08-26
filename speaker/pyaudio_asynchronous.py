@@ -63,7 +63,8 @@ def start(audio_packet_queue, period_sync_event):
 
 # end
 def end():
-    pass
+    global process_object
+    process_object.terminate()
 
 def wait_data_play_start(period_sync_event):
     tic = time.perf_counter()
