@@ -1,16 +1,33 @@
+<!DOCTYPE html>
 <html>
-  <style>
-    h1, h2 { display: inline-block; }
-  </style>
-  <body>
-    <form>
-      <input type="checkbox" id="encode">Encode</input><br>
-    </form>
-    <button onclick="toggleRecord()" id="record">Record</button>
-  </body>
-  {% load static %}
-  <script src="{% static "speaker/libopus.js" %}"></script>
-  <script src="{% static "speaker/opus.js" %}"></script>
-  <script src="{% static "speaker/handler.js" %}"></script>
-  <script src="{% static "speaker/main.js" %}"></script>
+
+<head>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css" />
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <form>
+            <input type="checkbox" id="encode" />Encode<br />
+            <input type="number" id="number-of-channel" />Number of Channel<br />
+            <input type="number" id="frame-size" />Frame Size<br />
+            <input type="number" id="sample-rate" />Sample Rate<br />
+            <select id="device-list">
+                <option value="volvo">Volvo</option>
+                <option value="saab">Saab</option>
+                <option value="fiat">Fiat</option>
+                <option value="audi">Audi</option>
+            </select>
+            <button onclick="getDeviceList()" id="button-get-device-list">Get Device List</button>
+            <br />
+        </form>
+        <button onclick="toggleRecord()" id="record">Record</button>
+    </div>
+</body>
+
+{% load static %}
+<script src="{% static "speaker/main.js" %}"></script>
+
 </html>

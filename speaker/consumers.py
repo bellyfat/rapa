@@ -1,9 +1,5 @@
 # chat/consumers.py
 from channels.generic.websocket import WebsocketConsumer
-import json
-import pyaudio
-import wave
-import sys
 from . import pyaudio_asynchronous
 import multiprocessing
 from opus import decoder

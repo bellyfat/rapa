@@ -1,11 +1,19 @@
-var isRecording = false, encode = false;
-var wsh = new WebSocket( 'ws://' + window.location.href.split( '/' )[2] + '/ws' );
+$(function() {
 
-function onWsMessage( msg ){ console.log(msg); }
+//var isRecording = false, encode = false;
+//var wsh = new WebSocket( 'ws://' + window.location.href.split( '/' )[2] + '/ws' );
 
-wsh.onmessage = onWsMessage;
-var ap = new OpusEncoderProcessor( wsh );
-var mh = new MediaHandler( ap );
+//function onWsMessage( msg ){ console.log(msg); }
+
+//wsh.onmessage = onWsMessage;
+//var ap = new OpusEncoderProcessor( wsh );
+//var mh = new MediaHandler( ap );
+
+});
+
+function getDeviceList() {
+    console.log($("#device-list")[0]);
+}
 
 function sendSettings()
 {
