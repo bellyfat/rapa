@@ -10,21 +10,27 @@ from opus import decoder
 
 class AudioPlaybackConsumer(WebsocketConsumer):
     def connect(self):
-        self.accept()
         # Opus decoder
         CHANNELS = 2
         RATE = 48000
         self.CHUNK = 1920
         self.decoder = decoder.Decoder(RATE,CHANNELS)
         self.opus_encoded = True
+
         # PyAudio Multiprocessing Wrapper
         self.audio_packet_queue = multiprocessing.Queue()
         self.period_sync_event = multiprocessing.Event()
-        pyaudio_asynchronous.start(self.audio_packet_queue,
+        self.pyaudio_process = pyaudio_asynchronous.start(self.audio_packet_queue,
             self.period_sync_event)
+        self.pyaudio_process.start()
+
+        # Accept connection only if everything is ok
+        self.accept()
 
     def disconnect(self, close_code):
-        pyaudio_asynchronous.end()
+        if self.pyaudio_process:
+            self.pyaudio_process.terminate()
+            self.pyaudio_process.join()
 
     def receive(self, text_data=None, bytes_data=None):
         if text_data:
