@@ -1,0 +1,16 @@
+<html>
+  <style>
+    h1, h2 { display: inline-block; }
+  </style>
+  <body>
+    <form>
+      <input type="checkbox" id="encode">Encode</input><br>
+    </form>
+    <button onclick="toggleRecord()" id="record">Record</button>
+  </body>
+  {% load static %}
+  <script src="{% static "speaker/libopus.js" %}"></script>
+  <script src="{% static "speaker/opus.js" %}"></script>
+  <script src="{% static "speaker/handler.js" %}"></script>
+  <script src="{% static "speaker/main.js" %}"></script>
+</html>
