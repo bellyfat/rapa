@@ -8,11 +8,24 @@ $(function() {
 //wsh.onmessage = onWsMessage;
 //var ap = new OpusEncoderProcessor( wsh );
 //var mh = new MediaHandler( ap );
-
+getDeviceList();
 });
 
 function getDeviceList() {
-    console.log($("#device-list")[0]);
+    device_list = $("#device-list")[0];
+    $.getJSON("get_device_list", (data, status) => {
+        for (i = device_list.options.length - 1; i >= 0; i--) {
+            device_list.remove(i);
+        }
+        for (var index in data) {
+            if (data.hasOwnProperty(index)) {
+                var new_option = $("<option>")[0];
+                new_option.value = data[index].name;
+                new_option.innerText = data[index].name;
+                device_list.append(new_option);
+            }
+        }
+    })
 }
 
 function sendSettings()
