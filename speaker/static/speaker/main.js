@@ -1,6 +1,9 @@
 
-var isRecording = false, encode = false;
+var isRecording = false;
+var encode = true;
 var audio_stream = null;
+var audio_processor = null;
+var media_handler = null;
 
 $(function() {
 //var wsh = new WebSocket( 'ws://' + window.location.href.split( '/' )[2] + '/ws' );
@@ -33,9 +36,11 @@ function getDeviceList() {
 function sendSettings()
 {
     if( document.getElementById( "encode" ).checked )
-	encode = 1;
-    else
-	encode = 0;
+    {
+        encode = 1;
+    } else {
+        encode = 0;
+    }
 
     var rate = String( mh.context.sampleRate / ap.downSample );
     var opusRate = String( ap.opusRate );
@@ -50,7 +55,9 @@ function startRecord()
 {
     document.getElementById( "record").innerHTML = "Stop";
     document.getElementById( "encode" ).disabled = true;
-    //mh.context.resume(); // needs an await?
+    audio_processor = new OpusEncoderProcessor( audio_stream );
+    media_handler = new MediaHandler( audio_processor );
+    media_handler.context.resume(); // needs an await?
     //sendSettings();
     isRecording = true;
     console.log( 'started recording' );
@@ -61,6 +68,7 @@ function stopRecord()
     isRecording  = false;
     document.getElementById( "record").innerHTML = "Record";
     document.getElementById( "encode" ).disabled = false;
+    media_handler.context.close();
     console.log( 'ended recording' );
 }
 
@@ -70,7 +78,8 @@ function toggleRecord()
         audio_stream.close();
         audio_stream = null;
     } else {
-        audio_stream = new WebSocket( 'ws://' + window.location.href.split( '/' )[2] + '/ws' );
+        //audio_stream = new WebSocket( 'ws://' + window.location.href.split( '/' )[2] + '/ws' );
+        audio_stream = new WebSocket( 'ws://192.168.0.104:8000/ws/speaker/audioplayback/' );
         audio_stream.onopen = startRecord;
         audio_stream.onclose = stopRecord;
     }
