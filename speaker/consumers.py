@@ -31,9 +31,9 @@ class AudioPlaybackConsumer(WebsocketConsumer):
 
     def receive(self, text_data=None, bytes_data=None):
         if text_data:
-            print("Recieved text_data: ", len(text_data))
+            print("Recieved text_data length: ", len(text_data))
         if bytes_data:
-            print("Recieved bytes_data: ", len(bytes_data))
+            print("Recieved bytes_data length: ", len(bytes_data))
             if self.opus_encoded:
                 bytes_data = self.decoder.decode(bytes_data, self.CHUNK)
             self.audio_packet_queue.put(bytes_data)
@@ -80,13 +80,13 @@ class AudioRecordConsumer(WebsocketConsumer):
 
     def send(self, text_data=None, bytes_data=None):
         if bytes_data:
-            print("Sending audio packet", len(bytes_data))
+            print("Audio packet length:", len(bytes_data))
             encoded_data = self.encoder.encode(bytes_data, self.CHUNK)
-            print("Sending encoded data", len(encoded_data))
+            print("Encoded data length:", len(encoded_data))
             super().send(bytes_data=encoded_data)
 
     def receive(self, text_data=None, bytes_data=None):
         if text_data:
-            print("Recieved text_data: ", len(text_data))
+            print("Recieved text_data length: ", len(text_data))
         if bytes_data:
-            print("Recieved bytes_data: ", len(bytes_data))
+            print("Recieved bytes_data length: ", len(bytes_data))
