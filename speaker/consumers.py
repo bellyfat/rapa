@@ -34,8 +34,11 @@ class AudioPlaybackConsumer(WebsocketConsumer):
             print("Recieved text_data length: ", len(text_data))
         if bytes_data:
             print("Recieved bytes_data length: ", len(bytes_data))
-            if self.opus_encoded:
+            try:
                 bytes_data = self.decoder.decode(bytes_data, self.CHUNK)
+            except:
+                print("Failed to decode data")
+                self.close()
             self.audio_packet_queue.put(bytes_data)
 
 def get_audio_packet_and_send(audio_packet_queue, audio_packet_sender, thread_terminated_event):
