@@ -88,8 +88,14 @@ function toggleRecord()
 }
 
 function recordLocal() {
+    audio_stream = new WebSocket( 'ws://192.168.0.104:8000/ws/speaker/audioplayback/' );
     audio_record = new WebSocket( 'ws://localhost:8000/ws/speaker/audiorecord/' );
     audio_record.onmessage = function (message) {
-        console.log(message);
+        audio_stream.send(message.data);
     }
+}
+
+function stopLocalRecord() {
+    audio_stream.close();
+    audio_record.close();
 }
