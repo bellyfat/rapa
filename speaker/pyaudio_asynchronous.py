@@ -41,7 +41,7 @@ class PyAudioAsync(multiprocessing.Process):
             output_device_index=output_device_info["index"])
 
         while not self.process_terminated.is_set():
-            self.logger.info("Process: interating")
+            self.logger.info("Process: iterating")
             audio_packet = None
             if not self.audio_packet_queue.empty():
                 self.logger.info("Playing audio")
@@ -85,7 +85,7 @@ class PyAudioAsyncInput(multiprocessing.Process):
             input_device_index=input_device_info["index"])
 
         while not self.process_terminated.is_set():
-            self.logger.info("Process Audio Input: interating")
+            self.logger.info("Process Audio Input: iterating")
             audio_packet = stream.read(self.CHUNK)
             self.audio_packet_sender.put(audio_packet)
 
