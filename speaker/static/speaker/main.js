@@ -5,6 +5,8 @@ var audio_stream = null;
 var audio_processor = null;
 var media_handler = null;
 
+var audio_record = null;
+
 $(function() {
 //var wsh = new WebSocket( 'ws://' + window.location.href.split( '/' )[2] + '/ws' );
 
@@ -82,5 +84,12 @@ function toggleRecord()
         audio_stream = new WebSocket( 'ws://192.168.0.104:8000/ws/speaker/audioplayback/' );
         audio_stream.onopen = startRecord;
         audio_stream.onclose = stopRecord;
+    }
+}
+
+function recordLocal() {
+    audio_record = new WebSocket( 'ws://localhost:8000/ws/speaker/audiorecord/' );
+    audio_record.onmessage = function (message) {
+        console.log(message);
     }
 }
