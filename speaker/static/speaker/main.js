@@ -1,6 +1,8 @@
-$(function() {
 
-//var isRecording = false, encode = false;
+var isRecording = false, encode = false;
+var audio_stream = null;
+
+$(function() {
 //var wsh = new WebSocket( 'ws://' + window.location.href.split( '/' )[2] + '/ws' );
 
 //function onWsMessage( msg ){ console.log(msg); }
@@ -48,8 +50,8 @@ function startRecord()
 {
     document.getElementById( "record").innerHTML = "Stop";
     document.getElementById( "encode" ).disabled = true;
-    mh.context.resume(); // needs an await?
-    sendSettings();
+    //mh.context.resume(); // needs an await?
+    //sendSettings();
     isRecording = true;
     console.log( 'started recording' );
 }
@@ -59,13 +61,17 @@ function stopRecord()
     isRecording  = false;
     document.getElementById( "record").innerHTML = "Record";
     document.getElementById( "encode" ).disabled = false;
-    console.log( 'ended recording' );    
+    console.log( 'ended recording' );
 }
 
 function toggleRecord()
 {
-    if( isRecording )
-	stopRecord();
-    else
-	startRecord();
+    if( isRecording ) {
+        audio_stream.close();
+        audio_stream = null;
+    } else {
+        audio_stream = new WebSocket( 'ws://' + window.location.href.split( '/' )[2] + '/ws' );
+        audio_stream.onopen = startRecord;
+        audio_stream.onclose = stopRecord;
+    }
 }
