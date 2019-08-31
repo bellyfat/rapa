@@ -42,7 +42,6 @@ def get_audio_packet_and_send(audio_packet_queue, audio_packet_sender, thread_te
     while not thread_terminated_event.is_set():
         try:
             audio_packet = audio_packet_queue.get(True, 5)
-            print("Sending audio packet", len(audio_packet))
             audio_packet_sender.send(bytes_data=audio_packet)
         except:
             print("Get audio packet queue timeout")
@@ -50,40 +49,25 @@ def get_audio_packet_and_send(audio_packet_queue, audio_packet_sender, thread_te
 
 class AudioRecordConsumer(WebsocketConsumer):
     def connect(self):
-        print("Connecting to input")
         # Opus decoder
         CHANNELS = 2
         RATE = 48000
         self.CHUNK = 1920
         self.encoder = encoder.Encoder(RATE, CHANNELS, 'voip')
-        print("Created encoder")
 
         # PyAudio Multiprocessing Wrapper
         self.audio_packet_queue = multiprocessing.Queue()
         self.pyaudio_process = pyaudio_asynchronous.start_input(self.audio_packet_queue)
         self.pyaudio_process.start()
-        print("Process started")
 
         self.worker_thread_terminated = threading.Event()
         self.worker_thread_terminated.clear()
         self.worker_thread = threading.Thread(target=get_audio_packet_and_send,
             args=(self.audio_packet_queue, self, self.worker_thread_terminated))
         self.worker_thread.start()
-        '''
-        while not self.socket_terminated.is_set():
-            try:
-                audio_packet = self.audio_packet_queue.get(True, 30)
-                print("Sending audio packet", len(audio_packet))
-                self.send(bytes_data=audio_packet)
-            except:
-                print("Get audio packet timeout")
-                self.socket_terminated.set()
-                self.close()
-        '''
 
         # Accept connection only if everything is ok
         self.accept()
-        print("Connection accepted")
 
     def disconnect(self, close_code):
         if self.worker_thread_terminated:
@@ -96,22 +80,13 @@ class AudioRecordConsumer(WebsocketConsumer):
 
     def send(self, text_data=None, bytes_data=None):
         if bytes_data:
+            print("Sending audio packet", len(bytes_data))
             encoded_data = self.encoder.encode(bytes_data, self.CHUNK)
+            print("Sending encoded data", len(encoded_data))
             super().send(bytes_data=encoded_data)
 
     def receive(self, text_data=None, bytes_data=None):
         if text_data:
             print("Recieved text_data: ", len(text_data))
-            '''
-            while not self.socket_terminated.is_set():
-                try:
-                    audio_packet = self.audio_packet_queue.get(True, 5)
-                    print("Sending audio packet", len(audio_packet))
-                    self.send(bytes_data=audio_packet)
-                except:
-                    print("Get audio packet timeout")
-                    self.socket_terminated.set()
-                    self.close()
-            '''
         if bytes_data:
             print("Recieved bytes_data: ", len(bytes_data))

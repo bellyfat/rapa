@@ -89,7 +89,6 @@ class PyAudioAsyncInput(multiprocessing.Process):
             audio_packet = stream.read(self.CHUNK)
             self.audio_packet_sender.put(audio_packet)
 
-
 # start
 #process_object = None
 logger_created = False
