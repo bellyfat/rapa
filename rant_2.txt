@@ -1,0 +1,36 @@
+date: weekend of 31 Aug 2019
+
+stream audio from localhost to target server
+server, as it implies, already has the socket server running and ready to play audio as data is recieved
+
+referenced brautopy
+record audio from browser mic
+process audio in javascript
+opus wrapper and libopus in javascript
+all audio processing (encoding) is done by browser
+data is then sent to server and server will decode and play it accordingly
+
+UI was created to get list of audio devices, but real functionality is not yet done
+
+found out server is playing low quality audio
+when compared to running native python script to do recording, encoding and sending
+
+created audio recording consumer
+a problem here is that the audio recording process needs to send out the audio packet asynchronously
+but a forked process will have a different virtual memory
+it's not trivial to attach a socket to another process
+also, the socket consumer is running in the server process so it cannot block
+thus to send the audio packet asynchronously, another thread is created
+
+created a local socket consumer
+browser will connect to local socket
+recieve data from local socket
+pipe data to external server socket without any processing
+the throughput is a concern
+packets lost is getting frequent
+processing power is high
+but it works
+
+written UI to configure audio devices
+decided to send configuration through socket instead of using REST API
+socket will be kept open once connected
