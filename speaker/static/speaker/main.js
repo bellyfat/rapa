@@ -15,13 +15,30 @@ $(function() {
 //wsh.onmessage = onWsMessage;
 //var ap = new OpusEncoderProcessor( wsh );
 //var mh = new MediaHandler( ap );
-getDeviceList('input-source-device');
-getDeviceList('output-source-device');
+getInputDeviceList();
+getOutputDeviceList();
 });
 
-function getDeviceList(source_id) {
-    $.getJSON("get_device_list", (data, status) => {
-        device_list = $("#" + source_id + " #device-list")[0];
+function getInputDeviceList() {
+    $.getJSON("get_input_device_list", (data, status) => {
+        device_list = $("#input-source-device #device-list")[0];
+        for (i = device_list.options.length - 1; i >= 0; i--) {
+            device_list.remove(i);
+        }
+        for (var index in data) {
+            if (data.hasOwnProperty(index)) {
+                var new_option = $("<option>")[0];
+                new_option.value = data[index].name;
+                new_option.innerText = data[index].name;
+                device_list.append(new_option);
+            }
+        }
+    })
+}
+
+function getOutputDeviceList() {
+    $.getJSON("get_output_device_list", (data, status) => {
+        device_list = $("#output-source-device #device-list")[0];
         for (i = device_list.options.length - 1; i >= 0; i--) {
             device_list.remove(i);
         }
