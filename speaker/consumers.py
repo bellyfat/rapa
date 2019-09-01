@@ -4,15 +4,19 @@ from . import pyaudio_asynchronous
 import multiprocessing
 import threading
 from opus import encoder, decoder
+import json
 
 class AudioPlaybackConsumer(WebsocketConsumer):
     def connect(self):
+        # Audio configurations
+        self.number_of_output_channel = 2
+        self.channel_width = 2
+        self.sample_rate = 44100
         # Opus decoder
-        CHANNELS = 2
-        RATE = 48000
-        self.CHUNK = 1920
-        self.decoder = decoder.Decoder(RATE,CHANNELS)
+        self.encoder_sample_rate = 48000
+        self.chunk_frame_length = 1920
         self.opus_encoded = True
+        self.decoder = None
 
         # PyAudio Multiprocessing Wrapper
         #self.audio_packet_queue = multiprocessing.Queue()
@@ -35,22 +39,50 @@ class AudioPlaybackConsumer(WebsocketConsumer):
         if text_data:
             print("Recieved text_data length: ", len(text_data))
             if text_data.startswith("config:"):
-                pass
+                print(text_data)
+                configuration_text = text_data[7:]
+                try:
+                    configuration = json.loads(configuration_text)
+                    if "opus-encoded" in configuration:
+                        self.opus_encoded = configuration["opus-encoded"]
+                    if "number-of-output-channel" in configuration:
+                        self.number_of_output_channel = configuration["number-of-output-channel"]
+                    if "channel-width" in configuration:
+                        self.channel_width = configuration["channel-width"]
+                    if "sample-rate" in configuration:
+                        self.sample_rate = configuration["sample-rate"]
+                    if "chunk-frame-length" in configuration:
+                        self.chunk_frame_length = configuration["chunk-frame-length"]
+                    if "encoder-sample-rate" in configuration:
+                        self.encoder_sample_rate = configuration["encoder-sample-rate"]
+                except json.decoder.JSONDecodeError:
+                    print("json failed to parse configuration_text")
+                    print(configuration_text)
+                except:
+                    print("Configuration error")
             elif text_data.startswith("output-open:"):
+                self.decoder = decoder.Decoder(self.encoder_sample_rate, self.number_of_output_channel)
+
                 self.audio_packet_queue = multiprocessing.Queue()
                 self.period_sync_event = multiprocessing.Event()
                 self.pyaudio_process = pyaudio_asynchronous.start(self.audio_packet_queue,
                     self.period_sync_event)
+                self.pyaudio_process.number_of_output_channel = self.number_of_output_channel
+                self.pyaudio_process.channel_width = self.channel_width
+                self.pyaudio_process.sample_rate = self.sample_rate
+                self.pyaudio_process.chunk_frame_length = self.chunk_frame_length
+
                 self.pyaudio_process.start()
                 self.audio_output_open = True
+
             elif text_data.startswith("output-close:"):
                 self.pyaudio_process.terminate()
                 self.audio_output_open = False
         if bytes_data:
             print("Recieved bytes_data length: ", len(bytes_data))
             try:
-                if self.opus_encoded:
-                    bytes_data = self.decoder.decode(bytes_data, self.CHUNK)
+                if self.opus_encoded and self.decoder:
+                    bytes_data = self.decoder.decode(bytes_data, self.chunk_frame_length)
             except:
                 print("Failed to decode data")
                 self.close()

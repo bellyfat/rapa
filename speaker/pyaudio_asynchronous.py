@@ -7,7 +7,7 @@ import time
 import signal
 
 class PyAudioAsync(multiprocessing.Process):
-    CHUNK = 1920
+    chunk_frame_length = 1920
     number_of_output_channel = 2
     channel_width = 2
     sample_rate = 44100
@@ -29,7 +29,7 @@ class PyAudioAsync(multiprocessing.Process):
         self.logger.setLevel(logging.INFO)
 
         signal.signal(signal.SIGTERM, self.terminate_process)
-        silent_chunk = b'\x00'*self.CHUNK*self.channel_width*self.number_of_output_channel
+        silent_chunk = b'\x00'*self.chunk_frame_length*self.channel_width*self.number_of_output_channel
 
         p = pyaudio.PyAudio()
         output_device_info = p.get_default_output_device_info()
@@ -53,7 +53,7 @@ class PyAudioAsync(multiprocessing.Process):
             stream.write(audio_packet)
 
 class PyAudioAsyncInput(multiprocessing.Process):
-    CHUNK = 1920
+    chunk_frame_length = 1920
     number_of_input_channel = 2
     sample_rate = 44100
 
@@ -80,13 +80,13 @@ class PyAudioAsyncInput(multiprocessing.Process):
         stream = p.open(format=pyaudio.paInt16,
             channels=self.number_of_input_channel,
             rate=self.sample_rate,
-            frames_per_buffer=self.CHUNK,
+            frames_per_buffer=self.chunk_frame_length,
             input=True,
             input_device_index=input_device_info["index"])
 
         while not self.process_terminated.is_set():
             self.logger.info("Process Audio Input: iterating")
-            audio_packet = stream.read(self.CHUNK)
+            audio_packet = stream.read(self.chunk_frame_length)
             self.audio_packet_sender.put(audio_packet)
 
 # start
