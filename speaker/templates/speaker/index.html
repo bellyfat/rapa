@@ -73,19 +73,27 @@
           </div>
           <div class="input-group">
             <label for="number-of-channel">Number of Channel</label>
-            <input type="number" class="form-control" placeholder="2" id="number-of-channel" />
+            <input type="number" class="form-control" placeholder="2" min="1" value="2" id="number-of-channel" />
           </div>
           <div class="input-group">
-            <label for="frame-size">Frame Size</label>
-            <input type="number" class="form-control" placeholder="1920" id="frame-size" />
+            <label for="channel-width">Channel Width</label>
+            <input type="number" class="form-control" placeholder="2" min="1" value="2" id="channel-width" />
           </div>
           <div class="input-group">
             <label for="sample-rate">Sample Rate</label>
-            <input type="number" class="form-control" placeholder="44100" id="sample-rate" />
+            <input type="number" class="form-control" placeholder="44100" value="44100" id="sample-rate" />
+          </div>
+          <div class="input-group">
+            <label for="frame-length">Frame Length</label>
+            <input type="number" class="form-control" placeholder="1920" value="1920" id="frame-length" />
+          </div>
+          <div class="input-group">
+            <label for="encoder-sample-rate">Encoder Sample Rate</label>
+            <input type="number" class="form-control" placeholder="48000" value="48000" id="encoder-sample-rate" />
           </div>
           <div class="input-group">
             <label for="volume-control">Volume</label>
-            <input type="range" class="form-control" id="volume-control" min="0" max="100" />
+            <input type="range" class="form-control" id="volume-control" min="0" max="100" value="0"/>
           </div>
           <div id="output-source-device">
             <label for="device-list">Device List</label> <br>

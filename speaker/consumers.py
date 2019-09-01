@@ -45,16 +45,22 @@ class AudioPlaybackConsumer(WebsocketConsumer):
                     configuration = json.loads(configuration_text)
                     if "opus-encoded" in configuration:
                         self.opus_encoded = configuration["opus-encoded"]
+                        print("opus_encoded: ", self.opus_encoded)
                     if "number-of-output-channel" in configuration:
                         self.number_of_output_channel = configuration["number-of-output-channel"]
+                        print("number_of_output_channel: ", self.number_of_output_channel)
                     if "channel-width" in configuration:
                         self.channel_width = configuration["channel-width"]
+                        print("channel_width: ", self.channel_width)
                     if "sample-rate" in configuration:
                         self.sample_rate = configuration["sample-rate"]
+                        print("sample_rate: ", self.sample_rate)
                     if "chunk-frame-length" in configuration:
                         self.chunk_frame_length = configuration["chunk-frame-length"]
+                        print("chunk_frame_length: ", self.chunk_frame_length)
                     if "encoder-sample-rate" in configuration:
                         self.encoder_sample_rate = configuration["encoder-sample-rate"]
+                        print("encoder_sample_rate: ", self.encoder_sample_rate)
                 except json.decoder.JSONDecodeError:
                     print("json failed to parse configuration_text")
                     print(configuration_text)
@@ -76,7 +82,8 @@ class AudioPlaybackConsumer(WebsocketConsumer):
                 self.audio_output_open = True
 
             elif text_data.startswith("output-close:"):
-                self.pyaudio_process.terminate()
+                if self.pyaudio_process:
+                    self.pyaudio_process.terminate()
                 self.audio_output_open = False
         if bytes_data:
             print("Recieved bytes_data length: ", len(bytes_data))

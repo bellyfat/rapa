@@ -153,6 +153,17 @@ function connectOutputSourceWebsocket() {
 
 function outputSourceStartPlayback() {
     if (audio_stream) {
+        console.log("Sending Configuration");
+        configuration = {
+            "opus-encoded": $("#panel-output-source #encode")[0].checked,
+            "number-of-output-channel": Number($("#panel-output-source #number-of-channel")[0].value),
+            "channel-width": Number($("#panel-output-source #channel-width")[0].value),
+            "sample-rate": Number($("#panel-output-source #sample-rate")[0].value),
+            "chunk-frame-length": Number($("#panel-output-source #frame-length")[0].value),
+            "encoder-sample-rate": Number($("#panel-output-source #encoder-sample-rate")[0].value),
+        };
+        console.log(configuration);
+        audio_stream.send("config:" + JSON.stringify(configuration));
         console.log("Starting playback");
         audio_stream.send("output-open:");
     }
