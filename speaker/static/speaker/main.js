@@ -143,3 +143,24 @@ function stopLocalRecord() {
     audio_stream.close();
     audio_record.close();
 }
+
+function connectOutputSourceWebsocket() {
+    if (audio_stream) {
+        audio_stream.close();
+    }
+    audio_stream = new WebSocket( 'ws://localhost:8000/ws/speaker/audioplayback/' );
+}
+
+function outputSourceStartPlayback() {
+    if (audio_stream) {
+        console.log("Starting playback");
+        audio_stream.send("output-open:");
+    }
+}
+
+function outputSourceStopPlayback() {
+    if (audio_stream) {
+        console.log("Stopping playback");
+        audio_stream.send("output-close:");
+    }
+}

@@ -19,6 +19,7 @@ class AudioPlaybackConsumer(WebsocketConsumer):
         #self.period_sync_event = multiprocessing.Event()
         #self.pyaudio_process = pyaudio_asynchronous.start(self.audio_packet_queue,
         #    self.period_sync_event)
+        self.pyaudio_process = None
         self.audio_output_open = False
         #self.pyaudio_process.start()
 

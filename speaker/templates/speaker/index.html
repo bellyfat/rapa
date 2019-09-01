@@ -61,6 +61,8 @@
         <div class="panel panel-default" id="panel-output-source">
           <div class="panel-heading">
             <h3 class="panel-title">Output Source</h3>
+            <button type="button" class="btn btn-default" onclick="connectOutputSourceWebsocket()"
+            id="button-output-source-connect">Connect</button>
           </div>
 
           <div class="input-group">
@@ -90,6 +92,11 @@
             <select id="device-list">
             </select>
             <button onclick="getOutputDeviceList()" id="button-get-device-list">Get Device List</button>
+          </div>
+
+          <div class="btn-group" role="group" aria-label="...">
+            <button type="button" class="btn btn-default" onclick="outputSourceStartPlayback()">Start Playback</button>
+            <button type="button" class="btn btn-default" onclick="outputSourceStopPlayback()">Stop Playback</button>
           </div>
         </div>
       </div>
