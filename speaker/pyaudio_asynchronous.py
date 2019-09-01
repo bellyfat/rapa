@@ -33,6 +33,17 @@ class PyAudioAsync(multiprocessing.Process):
 
         p = pyaudio.PyAudio()
         output_device_info = p.get_default_output_device_info()
+        '''
+        output_device_name = "Speakers "
+        output_device_info = None
+        for i in range(p.get_device_count()):
+            device_info = p.get_device_info_by_index(i)
+            if output_device_name in device_info["name"]:
+                output_device_info = device_info
+        if not output_device_info:
+            print("Output device not found")
+            return
+        '''
         self.logger.info(output_device_info)
         stream = p.open(format=pyaudio.paInt16,
             channels=self.number_of_output_channel,

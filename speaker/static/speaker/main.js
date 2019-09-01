@@ -182,7 +182,7 @@ function connectInputSourceWebsocket() {
     }
     audio_record = new WebSocket( 'ws://localhost:8000/ws/speaker/audiorecord/' );
     audio_record.onmessage = function (message) {
-        if (audio_stream.readyState == WebSocket.OPEN) {
+        if (audio_stream && (audio_stream.readyState == WebSocket.OPEN)) {
             audio_stream.send(message.data);
         }
     }
@@ -200,14 +200,14 @@ function inputSourceStartRecord() {
         };
         console.log(configuration);
         audio_record.send("config:" + JSON.stringify(configuration));
-        console.log("Starting playback");
+        console.log("Starting record");
         audio_record.send("input-open:");
     }
 }
 
 function inputSourceStopRecord() {
     if (audio_record) {
-        console.log("Stopping playback");
+        console.log("Stopping record");
         audio_record.send("input-close:");
     }
 }
