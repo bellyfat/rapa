@@ -107,22 +107,27 @@ def get_audio_packet_and_send(audio_packet_queue, audio_packet_sender, thread_te
 
 class AudioRecordConsumer(WebsocketConsumer):
     def connect(self):
-        # Opus decoder
-        CHANNELS = 2
-        RATE = 48000
-        self.CHUNK = 1920
-        self.encoder = encoder.Encoder(RATE, CHANNELS, 'voip')
+        # Audio configurations
+        self.number_of_input_channel = 2
+        self.sample_rate = 44100
+        # Opus encoder
+        self.encoder_sample_rate = 48000
+        self.chunk_frame_length = 1920
+        self.opus_encoded = True
+        self.encoder = None
 
         # PyAudio Multiprocessing Wrapper
-        self.audio_packet_queue = multiprocessing.Queue()
-        self.pyaudio_process = pyaudio_asynchronous.start_input(self.audio_packet_queue)
-        self.pyaudio_process.start()
+        #self.audio_packet_queue = multiprocessing.Queue()
+        #self.pyaudio_process = pyaudio_asynchronous.start_input(self.audio_packet_queue)
+        self.pyaudio_process = None
+        #self.pyaudio_process.start()
 
-        self.worker_thread_terminated = threading.Event()
-        self.worker_thread_terminated.clear()
-        self.worker_thread = threading.Thread(target=get_audio_packet_and_send,
-            args=(self.audio_packet_queue, self, self.worker_thread_terminated))
-        self.worker_thread.start()
+        #self.worker_thread_terminated = threading.Event()
+        #self.worker_thread_terminated.clear()
+        #self.worker_thread = threading.Thread(target=get_audio_packet_and_send,
+        #    args=(self.audio_packet_queue, self, self.worker_thread_terminated))
+        self.worker_thread_terminated = None
+        #self.worker_thread.start()
 
         # Accept connection only if everything is ok
         self.accept()
@@ -139,12 +144,64 @@ class AudioRecordConsumer(WebsocketConsumer):
     def send(self, text_data=None, bytes_data=None):
         if bytes_data:
             print("Audio packet length:", len(bytes_data))
-            encoded_data = self.encoder.encode(bytes_data, self.CHUNK)
+            try:
+                if self.opus_encoded and self.encoder:
+                    encoded_data = self.encoder.encode(bytes_data, self.CHUNK)
+            except:
+                print("Failed to encode data")
+                self.close()
             print("Encoded data length:", len(encoded_data))
             super().send(bytes_data=encoded_data)
 
     def receive(self, text_data=None, bytes_data=None):
         if text_data:
             print("Recieved text_data length: ", len(text_data))
+            if text_data.startswith("config:"):
+                print(text_data)
+                configuration_text = text_data[7:]
+                try:
+                    configuration = json.loads(configuration_text)
+                    if "opus-encoded" in configuration:
+                        self.opus_encoded = configuration["opus-encoded"]
+                        print("opus_encoded: ", self.opus_encoded)
+                    if "number-of-input-channel" in configuration:
+                        self.number_of_input_channel = configuration["number-of-input-channel"]
+                        print("number_of_input_channel: ", self.number_of_input_channel)
+                    if "sample-rate" in configuration:
+                        self.sample_rate = configuration["sample-rate"]
+                        print("sample_rate: ", self.sample_rate)
+                    if "chunk-frame-length" in configuration:
+                        self.chunk_frame_length = configuration["chunk-frame-length"]
+                        print("chunk_frame_length: ", self.chunk_frame_length)
+                    if "encoder-sample-rate" in configuration:
+                        self.encoder_sample_rate = configuration["encoder-sample-rate"]
+                        print("encoder_sample_rate: ", self.encoder_sample_rate)
+                except json.decoder.JSONDecodeError:
+                    print("json failed to parse configuration_text")
+                    print(configuration_text)
+                except:
+                    print("Configuration error")
+            elif text_data.startswith("input-open:"):
+                self.encoder = encoder.Encoder(self.encoder_sample_rate, self.number_of_input_channel, 'voip')
+
+                # PyAudio Multiprocessing Wrapper
+                self.audio_packet_queue = multiprocessing.Queue()
+                self.pyaudio_process = pyaudio_asynchronous.start_input(self.audio_packet_queue)
+                self.pyaudio_process.number_of_input_channel = self.number_of_input_channel
+                self.pyaudio_process.sample_rate = self.sample_rate
+                self.pyaudio_process.chunk_frame_length = self.chunk_frame_length
+                self.pyaudio_process.start()
+
+                self.worker_thread_terminated = threading.Event()
+                self.worker_thread_terminated.clear()
+                self.worker_thread = threading.Thread(target=get_audio_packet_and_send,
+                    args=(self.audio_packet_queue, self, self.worker_thread_terminated))
+                self.worker_thread.start()
+
+            elif text_data.startswith("input-close:"):
+                if self.worker_thread_terminated:
+                    self.worker_thread_terminated.set()
+                if self.pyaudio_process:
+                    self.pyaudio_process.terminate()
         if bytes_data:
             print("Recieved bytes_data length: ", len(bytes_data))
