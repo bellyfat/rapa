@@ -27,6 +27,8 @@ class AudioPlaybackConsumer(WebsocketConsumer):
         self.audio_output_open = False
         #self.pyaudio_process.start()
 
+        pyaudio_asynchronous.init_logger()
+
         # Accept connection only if everything is ok
         self.accept()
 
@@ -72,8 +74,10 @@ class AudioPlaybackConsumer(WebsocketConsumer):
 
                     self.audio_packet_queue = multiprocessing.Queue()
                     self.period_sync_event = multiprocessing.Event()
-                    self.pyaudio_process = pyaudio_asynchronous.start(self.audio_packet_queue,
-                        self.period_sync_event)
+                    self.pyaudio_process = pyaudio_asynchronous.PyAudioAsync(
+                        audio_packet_queue=self.audio_packet_queue,
+                        period_sync_event=self.period_sync_event,
+                        audio_output=True)
                     self.pyaudio_process.number_of_output_channel = self.number_of_output_channel
                     self.pyaudio_process.channel_width = self.channel_width
                     self.pyaudio_process.sample_rate = self.sample_rate
@@ -97,7 +101,8 @@ class AudioPlaybackConsumer(WebsocketConsumer):
             if self.audio_output_open:
                 self.audio_packet_queue.put(bytes_data)
 
-def get_audio_packet_and_send(audio_packet_queue, audio_packet_sender, thread_terminated_event):
+def get_audio_packet_and_send(audio_packet_queue,
+        audio_packet_sender, thread_terminated_event):
     while not thread_terminated_event.is_set():
         try:
             audio_packet = audio_packet_queue.get(True, 5)
@@ -130,6 +135,8 @@ class AudioRecordConsumer(WebsocketConsumer):
         self.worker_thread_terminated = None
         self.audio_input_open = False
         #self.worker_thread.start()
+
+        pyaudio_asynchronous.init_logger()
 
         # Accept connection only if everything is ok
         self.accept()
@@ -188,7 +195,9 @@ class AudioRecordConsumer(WebsocketConsumer):
 
                     # PyAudio Multiprocessing Wrapper
                     self.audio_packet_queue = multiprocessing.Queue()
-                    self.pyaudio_process = pyaudio_asynchronous.start_input(self.audio_packet_queue)
+                    self.pyaudio_process = pyaudio_asynchronous.PyAudioAsync(
+                        audio_packet_queue=self.audio_packet_queue,
+                        audio_input=True)
                     self.pyaudio_process.number_of_input_channel = self.number_of_input_channel
                     self.pyaudio_process.sample_rate = self.sample_rate
                     self.pyaudio_process.chunk_frame_length = self.chunk_frame_length

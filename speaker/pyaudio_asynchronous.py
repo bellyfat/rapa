@@ -9,30 +9,37 @@ import signal
 class PyAudioAsync(multiprocessing.Process):
     chunk_frame_length = 1920
     number_of_output_channel = 2
+    number_of_input_channel = 2
     channel_width = 2
     sample_rate = 44100
+    audio_input = False
+    audio_output = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(target=self, args=args, kwargs=kwargs)
         self.daemon = True
-        self.audio_packet_queue = kwargs["audio_packet_queue"]
-        self.period_sync_event = kwargs["period_sync_event"]
+        self.save_kwargs(kwargs)
 
         self.process_terminated = multiprocessing.Event()
         self.process_terminated.clear()
 
+    def save_kwargs(self, kwargs):
+        if "audio_packet_queue" in kwargs:
+            self.audio_packet_queue = kwargs["audio_packet_queue"]
+        if "period_sync_event" in kwargs:
+            self.period_sync_event = kwargs["period_sync_event"]
+        if "audio_input" in kwargs:
+            self.audio_input = kwargs["audio_input"]
+        if "audio_output" in kwargs:
+            self.audio_output = kwargs["audio_output"]
+
     def terminate_process(self, signum, frame):
         self.process_terminated.set()
 
-    def run(self):
-        self.logger = multiprocessing.get_logger()
-        self.logger.setLevel(logging.INFO)
-
-        signal.signal(signal.SIGTERM, self.terminate_process)
-        silent_chunk = b'\x00'*self.chunk_frame_length*self.channel_width*self.number_of_output_channel
-
-        p = pyaudio.PyAudio()
-        output_device_info = p.get_default_output_device_info()
+    def run_audio_output(self):
+        bytes_per_frame = self.channel_width * self.number_of_output_channel
+        silent_chunk = b'\x00' * self.chunk_frame_length * bytes_per_frame
+        output_device_info = self.p.get_default_output_device_info()
         '''
         output_device_name = "Speakers "
         output_device_info = None
@@ -45,7 +52,7 @@ class PyAudioAsync(multiprocessing.Process):
             return
         '''
         self.logger.info(output_device_info)
-        stream = p.open(format=pyaudio.paInt16,
+        stream = self.p.open(format=pyaudio.paInt16,
             channels=self.number_of_output_channel,
             rate=self.sample_rate,
             output=True,
@@ -63,32 +70,10 @@ class PyAudioAsync(multiprocessing.Process):
             self.period_sync_event.set()
             stream.write(audio_packet)
 
-class PyAudioAsyncInput(multiprocessing.Process):
-    chunk_frame_length = 1920
-    number_of_input_channel = 2
-    sample_rate = 44100
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(target=self, args=args, kwargs=kwargs)
-        self.daemon = True
-        self.audio_packet_sender = kwargs["audio_packet_sender"]
-
-        self.process_terminated = multiprocessing.Event()
-        self.process_terminated.clear()
-
-    def terminate_process(self, signum, frame):
-        self.process_terminated.set()
-
-    def run(self):
-        self.logger = multiprocessing.get_logger()
-        self.logger.setLevel(logging.INFO)
-
-        signal.signal(signal.SIGTERM, self.terminate_process)
-
-        p = pyaudio.PyAudio()
-        input_device_info = p.get_default_input_device_info()
+    def run_audio_input(self):
+        input_device_info = self.p.get_default_input_device_info()
         self.logger.info(input_device_info)
-        stream = p.open(format=pyaudio.paInt16,
+        stream = self.p.open(format=pyaudio.paInt16,
             channels=self.number_of_input_channel,
             rate=self.sample_rate,
             frames_per_buffer=self.chunk_frame_length,
@@ -98,12 +83,26 @@ class PyAudioAsyncInput(multiprocessing.Process):
         while not self.process_terminated.is_set():
             self.logger.info("Process Audio Input: iterating")
             audio_packet = stream.read(self.chunk_frame_length)
-            self.audio_packet_sender.put(audio_packet)
+            self.audio_packet_queue.put(audio_packet)
+
+    def run(self):
+        self.logger = multiprocessing.get_logger()
+        self.logger.setLevel(logging.INFO)
+
+        signal.signal(signal.SIGTERM, self.terminate_process)
+
+        self.p = pyaudio.PyAudio()
+        if self.audio_output:
+            self.run_audio_output()
+        elif self.audio_input:
+            self.run_audio_input()
+        else:
+            self.logger.info("Neither output or input enabled")
 
 # start
 #process_object = None
 logger_created = False
-def start(audio_packet_queue, period_sync_event):
+def init_logger():
     #format = "%(asctime)s: %(message)s"
     #logging.basicConfig(format=format, level=logging.INFO,
     #                    datefmt="%H:%M:%S")
@@ -112,32 +111,11 @@ def start(audio_packet_queue, period_sync_event):
         multiprocessing.log_to_stderr()
         logger_created = True
 
-    #global process_object
-    process_object = PyAudioAsync(audio_packet_queue=audio_packet_queue,
-        period_sync_event=period_sync_event)
-    #process_object.start()
-    return process_object
-
-def start_input(audio_packet_sender):
-    global logger_created
-    if not logger_created:
-        multiprocessing.log_to_stderr()
-        logger_created = True
-
-    process_object = PyAudioAsyncInput(audio_packet_sender=audio_packet_sender)
-
-    return process_object
-
-# end
-#def end():
-#    global process_object
-#    if process_object:
-#        process_object.terminate()
-#        process_object.join()
-
+'''
 def wait_data_play_start(period_sync_event):
     tic = time.perf_counter()
     period_sync_event.wait()
     toc = time.perf_counter()
     logging.info("Waited for: %f s", toc-tic)
     period_sync_event.clear()
+'''
