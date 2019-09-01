@@ -15,12 +15,13 @@ $(function() {
 //wsh.onmessage = onWsMessage;
 //var ap = new OpusEncoderProcessor( wsh );
 //var mh = new MediaHandler( ap );
-getDeviceList();
+getDeviceList('input-source-device');
+getDeviceList('output-source-device');
 });
 
-function getDeviceList() {
-    device_list = $("#device-list")[0];
+function getDeviceList(source_id) {
     $.getJSON("get_device_list", (data, status) => {
+        device_list = $("#" + source_id + " #device-list")[0];
         for (i = device_list.options.length - 1; i >= 0; i--) {
             device_list.remove(i);
         }
