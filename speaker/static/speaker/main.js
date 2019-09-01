@@ -113,23 +113,27 @@ function recordLocal() {
     }
     // Close the other socket when one closes
     audio_record.onclose = function () {
-        if (audio_stream.readyState == WebSocket.OPEN) {
+        if ((audio_stream.readyState == WebSocket.OPEN)
+            || (audio_stream.readyState == WebSocket.CONNECTING)) {
             audio_stream.close();
         }
     }
     audio_stream.onclose = function () {
-        if (audio_record.readyState == WebSocket.OPEN) {
+        if ((audio_stream.readyState == WebSocket.OPEN)
+            || (audio_stream.readyState == WebSocket.CONNECTING)) {
             audio_record.close();
         }
     }
     // Same for error
     audio_record.onerror = function () {
-        if (audio_stream.readyState == WebSocket.OPEN) {
+        if ((audio_stream.readyState == WebSocket.OPEN)
+            || (audio_stream.readyState == WebSocket.CONNECTING)) {
             audio_stream.close();
         }
     }
     audio_stream.onerror = function () {
-        if (audio_record.readyState == WebSocket.OPEN) {
+        if ((audio_stream.readyState == WebSocket.OPEN)
+            || (audio_stream.readyState == WebSocket.CONNECTING)) {
             audio_record.close();
         }
     }
