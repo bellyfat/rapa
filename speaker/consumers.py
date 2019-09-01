@@ -15,11 +15,12 @@ class AudioPlaybackConsumer(WebsocketConsumer):
         self.opus_encoded = True
 
         # PyAudio Multiprocessing Wrapper
-        self.audio_packet_queue = multiprocessing.Queue()
-        self.period_sync_event = multiprocessing.Event()
-        self.pyaudio_process = pyaudio_asynchronous.start(self.audio_packet_queue,
-            self.period_sync_event)
-        self.pyaudio_process.start()
+        #self.audio_packet_queue = multiprocessing.Queue()
+        #self.period_sync_event = multiprocessing.Event()
+        #self.pyaudio_process = pyaudio_asynchronous.start(self.audio_packet_queue,
+        #    self.period_sync_event)
+        self.audio_output_open = False
+        #self.pyaudio_process.start()
 
         # Accept connection only if everything is ok
         self.accept()
@@ -32,14 +33,28 @@ class AudioPlaybackConsumer(WebsocketConsumer):
     def receive(self, text_data=None, bytes_data=None):
         if text_data:
             print("Recieved text_data length: ", len(text_data))
+            if text_data.startswith("config:"):
+                pass
+            elif text_data.startswith("output-open:"):
+                self.audio_packet_queue = multiprocessing.Queue()
+                self.period_sync_event = multiprocessing.Event()
+                self.pyaudio_process = pyaudio_asynchronous.start(self.audio_packet_queue,
+                    self.period_sync_event)
+                self.pyaudio_process.start()
+                self.audio_output_open = True
+            elif text_data.startswith("output-close:"):
+                self.pyaudio_process.terminate()
+                self.audio_output_open = False
         if bytes_data:
             print("Recieved bytes_data length: ", len(bytes_data))
             try:
-                bytes_data = self.decoder.decode(bytes_data, self.CHUNK)
+                if self.opus_encoded:
+                    bytes_data = self.decoder.decode(bytes_data, self.CHUNK)
             except:
                 print("Failed to decode data")
                 self.close()
-            self.audio_packet_queue.put(bytes_data)
+            if self.audio_output_open:
+                self.audio_packet_queue.put(bytes_data)
 
 def get_audio_packet_and_send(audio_packet_queue, audio_packet_sender, thread_terminated_event):
     while not thread_terminated_event.is_set():
