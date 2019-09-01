@@ -24,6 +24,8 @@
         <div class="panel panel-default" id="panel-input-source">
           <div class="panel-heading">
             <h3 class="panel-title">Input Source</h3>
+            <button type="button" class="btn btn-default" onclick="connectInputSourceWebsocket()"
+            id="button-input-source-connect">Connect</button>
           </div>
 
           <div class="input-group">
@@ -34,15 +36,19 @@
           </div>
           <div class="input-group">
             <label for="number-of-channel">Number of Channel</label>
-            <input type="number" class="form-control" placeholder="2" id="number-of-channel" />
-          </div>
-          <div class="input-group">
-            <label for="frame-size">Frame Size</label>
-            <input type="number" class="form-control" placeholder="1920" id="frame-size" />
+            <input type="number" class="form-control" placeholder="2" min="1" value="2" id="number-of-channel" />
           </div>
           <div class="input-group">
             <label for="sample-rate">Sample Rate</label>
-            <input type="number" class="form-control" placeholder="44100" id="sample-rate" />
+            <input type="number" class="form-control" placeholder="44100" value="44100" id="sample-rate" />
+          </div>
+          <div class="input-group">
+            <label for="frame-length">Frame Length</label>
+            <input type="number" class="form-control" placeholder="1920" value="1920" id="frame-length" />
+          </div>
+          <div class="input-group">
+            <label for="encoder-sample-rate">Encoder Sample Rate</label>
+            <input type="number" class="form-control" placeholder="48000" value="48000" id="encoder-sample-rate" />
           </div>
           <div class="input-group">
             <label for="volume-control">Volume</label>
@@ -53,6 +59,11 @@
             <select id="device-list">
             </select>
             <button onclick="getInputDeviceList()" id="button-get-device-list">Get Device List</button>
+          </div>
+
+          <div class="btn-group" role="group" aria-label="...">
+            <button type="button" class="btn btn-default" onclick="inputSourceStartRecord()">Start Record</button>
+            <button type="button" class="btn btn-default" onclick="inputSourceStopRecord()">Stop Record</button>
           </div>
         </div>
       </div>

@@ -175,3 +175,39 @@ function outputSourceStopPlayback() {
         audio_stream.send("output-close:");
     }
 }
+
+function connectInputSourceWebsocket() {
+    if (audio_record) {
+        audio_record.close();
+    }
+    audio_record = new WebSocket( 'ws://localhost:8000/ws/speaker/audiorecord/' );
+    audio_record.onmessage = function (message) {
+        if (audio_stream.readyState == WebSocket.OPEN) {
+            audio_stream.send(message.data);
+        }
+    }
+}
+
+function inputSourceStartRecord() {
+    if (audio_record) {
+        console.log("Sending Input Source Configuration");
+        configuration = {
+            "opus-encoded": $("#panel-input-source #encode")[0].checked,
+            "number-of-input-channel": Number($("#panel-input-source #number-of-channel")[0].value),
+            "sample-rate": Number($("#panel-input-source #sample-rate")[0].value),
+            "chunk-frame-length": Number($("#panel-input-source #frame-length")[0].value),
+            "encoder-sample-rate": Number($("#panel-input-source #encoder-sample-rate")[0].value),
+        };
+        console.log(configuration);
+        audio_record.send("config:" + JSON.stringify(configuration));
+        console.log("Starting playback");
+        audio_record.send("input-open:");
+    }
+}
+
+function inputSourceStopRecord() {
+    if (audio_record) {
+        console.log("Stopping playback");
+        audio_record.send("input-close:");
+    }
+}
